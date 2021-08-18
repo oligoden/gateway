@@ -1,0 +1,44 @@
+{
+    "openapi": "3.0.3",
+    "info": {
+      "title": "Gateway",
+      "description": "The API for the Oligoden Gateway service.",
+      "termsOfService": "https://oligoden.com/terms/",
+      "contact": {
+        "name": "Oligoden",
+        "url": "https://www.oligoden.com",
+        "email": "gateway-api@oligoden.com"
+      },
+      "license": {
+        "name": "Apache 2.0",
+        "url": "https://www.apache.org/licenses/LICENSE-2.0.html"
+      },
+      "version": "0.0.0"
+    },
+    "servers": [
+      {
+        "url": "http://localhost:{port}/{basePath}",
+        "description": "development",
+        "variables": {
+          "port": {
+            "default": "8080"
+          },
+          "basePath": {
+            "default": "api/v2"
+          }
+        }
+      }
+    ],
+    "paths": {
+      "/profiles": {
+        "post": {
+          "description": "Creates a profile",
+          "responses": {
+            "200": {          
+              "description": "Profile created."
+            }
+          }
+        }
+      }
+    }
+  }

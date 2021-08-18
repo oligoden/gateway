@@ -1,0 +1,68 @@
+{
+    "name": "gateway",
+    "work-location": ".",
+    "dest-location": ".",
+    "controls": {
+        "mappings": [
+            {"start": "file:*.go", "end": "exec:*"}
+        ]
+    },
+    "directories": {
+        ".gateway": {
+            "src-ovr": "/",
+            "controls":{
+                "behaviour": {
+                    "options":"output",
+                    "filters":{"comment":{}}
+                }
+            },
+            "directories": {
+                "cmd": {
+                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "files": {
+                        "main.go": {}
+                    },
+                    "directories": {
+                        "test": {
+                            "controls":{"behaviour": {"filters":{"comment":{}}}},
+                            "files": {
+                                "main.go": {}
+                            }
+                        }
+                    }
+                },
+                "subdomain": {
+                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "files": {
+                        "device.go": {},
+                        "controllers.go": {},
+                        "models.go": {},
+                        "view.go": {},
+                        "record.go": {}
+                    }
+                },
+                "session": {
+                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "files": {
+                        "device.go": {},
+                        "controllers.go": {},
+                        "models.go": {},
+                        "view.go": {},
+                        "record.go": {}
+                    }
+                }
+            },
+            "files": {
+                "index.go": {},
+                "subdomain.go": {}
+            }
+        }
+    },
+    "execs": {
+        "compile-gateway": {
+            "cmd": ["go", "build", "-o", "bin/gateway", "github.com/oligoden/gateway/.gateway/cmd"],
+            "timeout": 100000,
+            "env": {"GOOS":"linux"}
+        }
+    }
+}
