@@ -9,7 +9,7 @@
     },
     "directories": {
         ".gateway": {
-            "src-ovr": "/",
+            "src-ovr": "../",
             "controls":{
                 "behaviour": {
                     "options":"output",
