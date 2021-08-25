@@ -21,14 +21,6 @@
                     "controls":{"behaviour": {"filters":{"comment":{}}}},
                     "files": {
                         "main.go": {}
-                    },
-                    "directories": {
-                        "test": {
-                            "controls":{"behaviour": {"filters":{"comment":{}}}},
-                            "files": {
-                                "main.go": {}
-                            }
-                        }
                     }
                 },
                 "subdomain": {
@@ -53,8 +45,8 @@
                 }
             },
             "files": {
-                "index.go": {},
-                "subdomain.go": {}
+                "gateway.go": {},
+                "index.go": {}
             }
         }
     },

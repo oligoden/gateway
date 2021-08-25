@@ -79,6 +79,8 @@ github.com/mwitkow/go-conntrack v0.0.0-20161129095857-cc309e4a2223/go.mod h1:qRW
 github.com/mwitkow/go-conntrack v0.0.0-20190716064945-2f068394615f/go.mod h1:qRWi+5nqEBWmkhHvq77mSJWrCKwh8bxhgT7d/eI7P4U=
 github.com/oligoden/chassis v0.0.13-0.20210501202620-2a72e1b6fdf9 h1:EY0vcb8fiA4z/N8E1kY6lZtApDF8CuPDNr9UIlF8G7M=
 github.com/oligoden/chassis v0.0.13-0.20210501202620-2a72e1b6fdf9/go.mod h1:4FGXVpm/UMbjeKqNKsr5B1z7OXHYrIAlX7tmkUeiyzU=
+github.com/oligoden/chassis v0.0.13-0.20210825163743-e923aef53895 h1:czhn2+Hlr8/sXZh194MLFaXnHpGw8ijRQoxvqFa+soA=
+github.com/oligoden/chassis v0.0.13-0.20210825163743-e923aef53895/go.mod h1:4FGXVpm/UMbjeKqNKsr5B1z7OXHYrIAlX7tmkUeiyzU=
 github.com/pkg/errors v0.8.0/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.8.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=

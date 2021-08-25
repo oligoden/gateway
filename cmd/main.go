@@ -1,19 +1,13 @@
 package main
 
 import (
-	"context"
-	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
-	"os/signal"
-	"strings"
-	"time"
 
 	"github.com/oligoden/chassis/adapter"
 	"github.com/oligoden/chassis/storage/gosql"
-	"golang.org/x/crypto/acme/autocert"
 
 	//---
 	"github.com/oligoden/gateway"
@@ -38,7 +32,10 @@ func serveFiles(p, d string) http.Handler {
 }
 
 func main() {
+	domain := "example.com"
+
 	hIndex := gateway.NewIndex()
+	// hIndex := gateway.NewIndexTLS()
 	// task, _ := url.Parse("http://task:8080/")
 	// hIndex.SetProxy("tasks", httputil.NewSingleHostReverseProxy(task))
 
@@ -66,115 +63,38 @@ func main() {
 	store.Migrate(session.NewSessionUsersRecord())
 
 	dSubDomain := subdomain.NewDevice(store)
+	dSubDomain.SetProxy("test.example.com")
 	store.Migrate(subdomain.NewRecord())
-	sd := gateway.NewSubDomain(dSubDomain)
 
 	mux := http.NewServeMux()
-	mux.Handle("/", adapter.Core(sd.Check(serveFile("static/html"))).Notify().Entry())
-	mux.Handle("/static/", adapter.Core(sd.Check(serveFiles("/static/", "static"))).Entry())
 
-	mwProfile := adapter.Core(hIndex).And(dSession.CreateUser())
-	mux.Handle("/api/v1/profiles", mwProfile.And(sd.Check(nil)).And(dSession.Authenticate()).Notify().Entry())
+	mwRoot := adapter.New(domain)
+	mwRoot = mwRoot.Core(serveFile("static/html"))
+	mwRoot = mwRoot.SubDomain(dSubDomain.Check())
+	mwRoot = mwRoot.And(dSession.Authenticate()).Notify()
+	mux.Handle("/", mwRoot.Entry())
 
-	mwSession := adapter.MNA().Delete(dSession.Signout()).Post(dSession.Signin())
-	mux.Handle("/api/v1/sessions", mwSession.And(sd.Check(nil)).And(dSession.Authenticate()).Notify().Entry())
+	mwStatic := adapter.New(domain)
+	mwStatic = mwStatic.Core(serveFiles("/static/", "static"))
+	mwStatic = mwStatic.SubDomain(dSubDomain.Check(), "!api")
+	mwStatic = mwStatic.And(dSession.Authenticate())
+	mux.Handle("/static/", mwStatic.Entry())
 
-	mux.Handle("/api/v1/", adapter.Core(sd.Check(hIndex)).And(dSession.Authenticate()).Notify().Entry())
+	mwProfile := adapter.New(domain)
+	mwProfile = mwProfile.Core(hIndex)
+	mwProfile = mwProfile.SubDomain(dSubDomain.Check(), "api")
+	mwProfile = mwProfile.And(dSession.CreateUser())
+	mwProfile = mwProfile.SubDomain(dSubDomain.Check(), "!api")
+	mwProfile = mwProfile.And(dSession.Authenticate()).Notify()
+	mux.Handle("/profiles", mwProfile.Entry())
 
-	certManager := autocert.Manager{
-		Prompt:     autocert.AcceptTOS,
-		Cache:      autocert.DirCache("certs"),
-		HostPolicy: autocert.HostWhitelist(strings.Split(os.Getenv("ALLOW"), ",")...),
-		Email:      "info@oligoden.com",
-	}
+	mwSession := adapter.New(domain)
+	mwSession = mwSession.MNA()
+	mwSession = mwSession.Delete(dSession.Signout()).Post(dSession.Signin())
+	mwSession = mwSession.SubDomain(dSubDomain.Check(), "!api")
+	mwSession = mwSession.And(dSession.Authenticate()).Notify()
+	mux.Handle("/sessions", mwSession.Entry())
 
-	httpServer := &http.Server{
-		Addr:           ":80",
-		Handler:        certManager.HTTPHandler(nil),
-		ReadTimeout:    5 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		IdleTimeout:    120 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	httpsServer := &http.Server{
-		Addr:    ":443",
-		Handler: mux,
-		TLSConfig: &tls.Config{
-			GetCertificate:           certManager.GetCertificate,
-			PreferServerCipherSuites: true,
-			CurvePreferences: []tls.CurveID{
-				tls.CurveP256,
-				tls.X25519,
-			},
-			MinVersion: tls.VersionTLS12,
-			CipherSuites: []uint16{
-				tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
-				tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
-				tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
-				tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
-				// Best disabled, as they don't provide Forward Secrecy,
-				// but might be necessary for some clients
-				// tls.TLS_RSA_WITH_AES_256_GCM_SHA384,
-				// tls.TLS_RSA_WITH_AES_128_GCM_SHA256,
-			},
-		},
-		ReadTimeout:    5 * time.Second,
-		WriteTimeout:   10 * time.Second,
-		IdleTimeout:    120 * time.Second,
-		MaxHeaderBytes: 1 << 20,
-	}
-
-	serverHTTPError := make(chan error)
-	serverHTTPSError := make(chan error)
-	go func() {
-		err := httpServer.ListenAndServe()
-		if err != nil && err != http.ErrServerClosed {
-			serverHTTPError <- err
-			return
-		}
-		fmt.Println("http server shutdown")
-	}()
-	go func() {
-		err := httpsServer.ListenAndServeTLS("", "")
-		if err != nil && err != http.ErrServerClosed {
-			serverHTTPSError <- err
-			return
-		}
-		fmt.Println("https server shutdown")
-	}()
-
-	quit := make(chan os.Signal)
-	signal.Notify(quit, os.Interrupt)
-
-	log.Println("running gateway")
-	select {
-	case err := <-serverHTTPError:
-		fmt.Println("server error", err)
-		shutdown(httpsServer)
-		time.Sleep(100 * time.Millisecond)
-		os.Exit(1)
-	case err := <-serverHTTPSError:
-		fmt.Println("server error", err)
-		shutdown(httpServer)
-		time.Sleep(100 * time.Millisecond)
-		os.Exit(1)
-	case sig := <-quit:
-		fmt.Println("\ngot signal", sig)
-	}
-
-	shutdown(httpServer)
-	shutdown(httpsServer)
-	time.Sleep(100 * time.Millisecond)
-}
-
-func shutdown(s *http.Server) {
-	ctxServer, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	err := s.Shutdown(ctxServer)
-	if err != nil && err != http.ErrServerClosed {
-		fmt.Println("https server shutdown error", err)
-	}
+	gateway.Serve(mux)
+	// gateway.ServeTLS(mux)
 }
