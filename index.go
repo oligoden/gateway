@@ -34,7 +34,7 @@ func (h *Index) SetProxy(key string, p *httputil.ReverseProxy) {
 }
 
 func (h *Index) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	log.Println("/api/v1/... reverse proxy handler got", r.URL.Path)
+	log.Println("reverse proxy handler got", r.URL.Path)
 
 	// startTime := time.Now()
 	// defer func() {
@@ -44,7 +44,7 @@ func (h *Index) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// }()
 
 	for k, p := range h.reverseProxies {
-		if strings.HasPrefix(r.URL.Path, "/api/v1/"+k) {
+		if strings.HasPrefix(r.URL.Path, "/"+k) {
 			p.ServeHTTP(w, r)
 			return
 		}

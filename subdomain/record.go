@@ -25,7 +25,7 @@ func (Record) TableName() string {
 }
 
 func (Record) Migrate(db *sql.DB) error {
-	q := "CREATE TABLE `subdomains` ( `subdomain` varchar(255) DEFAULT NULL, `url` varchar(255) DEFAULT NULL, `uc` varchar(255) DEFAULT NULL, `id` int(10) unsigned NOT NULL AUTO_INCREMENT, `owner_id` int(10) unsigned DEFAULT NULL, `perms` varchar(255) DEFAULT NULL, `hash` varchar(255) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `uc` (`uc`) )"
+	q := "CREATE TABLE `subdomains` ( `subdomain` varchar(255) DEFAULT NULL, `url` varchar(255) DEFAULT NULL, `id` int(10) unsigned NOT NULL AUTO_INCREMENT, `uc` varchar(255) DEFAULT NULL, `owner_id` int(10) unsigned DEFAULT NULL, `perms` varchar(255) DEFAULT NULL, `hash` varchar(255) DEFAULT NULL, PRIMARY KEY (`id`), UNIQUE KEY `uc` (`uc`) )"
 
 	_, err := db.Exec(q)
 	if err != nil {

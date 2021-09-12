@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/http/httputil"
+	"net/url"
 	"os"
 
 	"github.com/oligoden/chassis/adapter"
@@ -21,24 +23,12 @@ import (
 	//end
 )
 
-func serveFile(f string) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, f)
-	})
-}
-
-func serveFiles(p, d string) http.Handler {
-	return http.StripPrefix(p, http.FileServer(http.Dir(d)))
-}
+var (
+	dbt = "mysql"
+	uri = ""
+)
 
 func main() {
-	domain := "example.com"
-
-	hIndex := gateway.NewIndex()
-	// hIndex := gateway.NewIndexTLS()
-	// task, _ := url.Parse("http://task:8080/")
-	// hIndex.SetProxy("tasks", httputil.NewSingleHostReverseProxy(task))
-
 	dbUser := os.Getenv("DB_USER")
 	dbPass := os.Getenv("DB_PASSWORD")
 	dbAddr := os.Getenv("DB_ADDRESS")
@@ -50,8 +40,34 @@ func main() {
 	if dbPort == "" {
 		dbPort = "3306"
 	}
-	uri := fmt.Sprintf(format, dbUser, dbPass, dbAddr, dbPort, dbName, params)
-	dbt := "mysql"
+	uri = fmt.Sprintf(format, dbUser, dbPass, dbAddr, dbPort, dbName, params)
+	dbt = "mysql"
+
+	mux := mux("oligoden.com")
+	gateway.Serve(mux)
+	// gateway.ServeTLS(mux)
+}
+
+func serveFile(f string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("serving file", f)
+		http.ServeFile(w, r, f)
+	})
+}
+
+func serveFiles(p, d string) http.Handler {
+	return http.StripPrefix(p, http.FileServer(http.Dir(d)))
+}
+
+func mux(dmn string) *http.ServeMux {
+	mux := http.NewServeMux()
+
+	hIndex := gateway.NewIndex()
+	// hIndex := gateway.NewIndexTLS()
+	profile, _ := url.Parse("http://profile/")
+	hIndex.SetProxy("profiles", httputil.NewSingleHostReverseProxy(profile))
+	// task, _ := url.Parse("http://task:8080/")
+	// hIndex.SetProxy("tasks", httputil.NewSingleHostReverseProxy(task))
 
 	store := gosql.New(dbt, uri)
 	if store.Err() != nil {
@@ -63,38 +79,35 @@ func main() {
 	store.Migrate(session.NewSessionUsersRecord())
 
 	dSubDomain := subdomain.NewDevice(store)
-	dSubDomain.SetProxy("test.example.com")
+	dSubDomain.SetProxy("api." + dmn)
+	dSubDomain.SetProxy("staging." + dmn)
 	store.Migrate(subdomain.NewRecord())
 
-	mux := http.NewServeMux()
+	mux.Handle("/", adapter.New(dmn).
+		Core(serveFile("static/index.html")).
+		SubDomain(dSubDomain.Check(dmn), "!api").
+		And(dSession.Authenticate()).
+		Notify().Entry())
 
-	mwRoot := adapter.New(domain)
-	mwRoot = mwRoot.Core(serveFile("static/html"))
-	mwRoot = mwRoot.SubDomain(dSubDomain.Check())
-	mwRoot = mwRoot.And(dSession.Authenticate()).Notify()
-	mux.Handle("/", mwRoot.Entry())
+	mux.Handle("/static/", adapter.New(dmn).
+		Core(serveFiles("/static/", "static")).
+		SubDomain(dSubDomain.Check(dmn), "!api").
+		And(dSession.Authenticate()).
+		Notify().Entry())
 
-	mwStatic := adapter.New(domain)
-	mwStatic = mwStatic.Core(serveFiles("/static/", "static"))
-	mwStatic = mwStatic.SubDomain(dSubDomain.Check(), "!api")
-	mwStatic = mwStatic.And(dSession.Authenticate())
-	mux.Handle("/static/", mwStatic.Entry())
+	mux.Handle("/profiles", adapter.New(dmn).
+		Core(hIndex).
+		SubDomain(dSubDomain.Check(dmn), "api").
+		And(dSession.CreateUser()).
+		SubDomain(dSubDomain.Check(dmn), "!api").
+		And(dSession.Authenticate()).
+		Notify().Entry())
 
-	mwProfile := adapter.New(domain)
-	mwProfile = mwProfile.Core(hIndex)
-	mwProfile = mwProfile.SubDomain(dSubDomain.Check(), "api")
-	mwProfile = mwProfile.And(dSession.CreateUser())
-	mwProfile = mwProfile.SubDomain(dSubDomain.Check(), "!api")
-	mwProfile = mwProfile.And(dSession.Authenticate()).Notify()
-	mux.Handle("/profiles", mwProfile.Entry())
+	mux.Handle("/sessions", adapter.New(dmn).MNA().
+		Delete(dSession.Signout()).Post(dSession.Signin()).
+		SubDomain(dSubDomain.Check(dmn), "!api").
+		And(dSession.Authenticate()).
+		Notify().Entry())
 
-	mwSession := adapter.New(domain)
-	mwSession = mwSession.MNA()
-	mwSession = mwSession.Delete(dSession.Signout()).Post(dSession.Signin())
-	mwSession = mwSession.SubDomain(dSubDomain.Check(), "!api")
-	mwSession = mwSession.And(dSession.Authenticate()).Notify()
-	mux.Handle("/sessions", mwSession.Entry())
-
-	gateway.Serve(mux)
-	// gateway.ServeTLS(mux)
+	return mux
 }

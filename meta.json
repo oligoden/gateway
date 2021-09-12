@@ -10,12 +10,7 @@
     "directories": {
         ".gateway": {
             "src-ovr": "../",
-            "controls":{
-                "behaviour": {
-                    "options":"output",
-                    "filters":{"comment":{}}
-                }
-            },
+            "controls":{"behaviour": {"options":"output", "filters":{"comment":{}}}},
             "directories": {
                 "cmd": {
                     "controls":{"behaviour": {"filters":{"comment":{}}}},
@@ -47,6 +42,13 @@
             "files": {
                 "gateway.go": {},
                 "index.go": {}
+            }
+        },
+        "static": {
+            "src-ovr": "../",
+            "controls":{"behaviour": {"options":"output", "filters":{"comment":{}}}},
+            "files": {
+                "index.html":{}
             }
         }
     },

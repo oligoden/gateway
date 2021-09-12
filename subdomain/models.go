@@ -24,19 +24,19 @@ func NewModel(r *http.Request, s model.Connector) *Model {
 	return m
 }
 
-func (m *Model) URL() string {
+func (m *Model) URL(dmn string) string {
 	if m.Err() != nil {
 		return ""
 	}
 
-	subdomain := strings.TrimSuffix(m.Request.Host, ".tallyclerk.co.za")
+	subdomain := strings.TrimSuffix(m.Request.Host, "."+dmn)
 	e := NewRecord()
 	c := m.Store.Connect(m.User())
 	where := gosql.NewWhere("subdomain=?", subdomain)
 	c.AddModifiers(where)
 	c.Read(e)
 	if c.Err() != nil {
-		m.Err(c.Err)
+		m.Err(c.Err())
 		return ""
 	}
 
