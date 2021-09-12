@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"github.com/oligoden/chassis"
 	"github.com/oligoden/chassis/device/model"
 	"github.com/oligoden/chassis/device/model/data"
 	"github.com/oligoden/chassis/storage/gosql"
@@ -67,7 +68,7 @@ func (m *Model) Authenticate() {
 	session := NewRecord()
 	c.Read(session)
 	if c.Err() != nil {
-		m.Err(c.Err())
+		m.Err(chassis.Mark("reading session", c.Err()))
 		return
 	}
 
@@ -86,7 +87,7 @@ func (m *Model) Authenticate() {
 	c.AddModifiers(joinSessionUsers, joinSessions, where)
 	c.Read(&userRecords)
 	if c.Err() != nil {
-		m.Err(c.Err())
+		m.Err(chassis.Mark("reading users", c.Err()))
 		return
 	}
 
@@ -149,22 +150,21 @@ func (m *Model) CreateUser() {
 
 	err := e.Prepare()
 	if err != nil {
-		m.Err(err)
+		m.Err(chassis.Mark("preparing user for create", err))
 		return
 	}
 
 	c := m.Store.Connect(m.User())
 	c.Create(e)
-	err = c.Err()
-	if err != nil {
-		m.Err(err)
+	if c.Err() != nil {
+		m.Err(chassis.Mark("creating user", c.Err()))
 		return
 	}
 	fmt.Println("created user", e.IDValue())
 
 	err = e.Hasher()
 	if err != nil {
-		m.Err(err)
+		m.Err(chassis.Mark("hashing user record", err))
 		return
 	}
 
@@ -172,15 +172,14 @@ func (m *Model) CreateUser() {
 	where := gosql.NewWhere("owner_id = ?", e.IDValue())
 	c.AddModifiers(where)
 	c.Update(e)
-	err = c.Err()
-	if err != nil {
-		m.Err(err)
+	if c.Err() != nil {
+		m.Err(chassis.Mark("updating user with hash", c.Err()))
 		return
 	}
 
 	err = e.Complete()
 	if err != nil {
-		m.Err(err)
+		m.Err(chassis.Mark("completing user record", err))
 		return
 	}
 
@@ -190,22 +189,20 @@ func (m *Model) CreateUser() {
 	m.Data(eSessionUser)
 
 	c.Create(eSessionUser)
-	err = c.Err()
-	if err != nil {
-		m.Err(err)
+	if c.Err() != nil {
+		m.Err(chassis.Mark("creating session user record", c.Err()))
 		return
 	}
 
 	err = eSessionUser.Hasher()
 	if err != nil {
-		m.Err(err)
+		m.Err(chassis.Mark("hashing session user record", err))
 		return
 	}
 
 	c.Update(eSessionUser)
-	err = c.Err()
-	if err != nil {
-		m.Err(err)
+	if c.Err() != nil {
+		m.Err(chassis.Mark("updating session user with hash", c.Err()))
 		return
 	}
 }
