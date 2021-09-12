@@ -2,7 +2,6 @@ package session
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"time"
@@ -25,19 +24,19 @@ func NewView(w http.ResponseWriter) *View {
 	return v
 }
 
-func (v View) SetUser(m *Model) {
+func (v *View) SetUser(m *Model) *View {
 	if m.Err() != nil {
-		log.Println("error setting X_user", m.Err())
-		return
+		return v
 	}
 
 	fmt.Println("setting response X_user", m.user)
 	v.Response.Header().Set("X_user", m.user)
+	return v
 }
 
-func (v View) SetCookie(m *Model) {
+func (v *View) SetCookie(m *Model) *View {
 	if m.Err() != nil {
-		return
+		return v
 	}
 
 	expire := time.Now().Add(24 * 200 * time.Hour)
@@ -53,4 +52,5 @@ func (v View) SetCookie(m *Model) {
 	}
 
 	http.SetCookie(v.Response, cookie)
+	return v
 }

@@ -10,9 +10,10 @@ func (d Device) Authenticate() http.Handler {
 		m.Bind()
 		m.Authenticate()
 
-		v := NewView(w)
-		v.SetUser(m)
-		v.SetCookie(m)
+		NewView(w).
+			SetUser(m).
+			SetCookie(m).
+			Error(m)
 	})
 }
 
@@ -29,9 +30,9 @@ func (d Device) Signin() http.Handler {
 		m := NewModel(r, d.Store)
 		m.Signin()
 
-		v := NewView(w)
-		v.SetUser(m)
-		v.JSON(m)
+		NewView(w).
+			SetUser(m).
+			JSON(m)
 	})
 }
 
@@ -41,7 +42,8 @@ func (d Device) Signout() http.Handler {
 		m.BindUser()
 		m.Signout()
 
-		v := NewView(w)
-		v.SetUser(m)
+		NewView(w).
+			SetUser(m).
+			Error(m)
 	})
 }
