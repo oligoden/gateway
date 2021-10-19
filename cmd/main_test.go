@@ -6,8 +6,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/blend/go-sdk/assert"
 	"github.com/steinfletcher/apitest"
-	"github.com/stretchr/testify/assert"
 )
 
 func TestRoot(t *testing.T) {
@@ -60,8 +60,9 @@ func Test(t *testing.T) {
 	db := testDBDropTables(t)
 	defer db.Close()
 
-	mux := mux("sut")
+	mux := mux("oligoden.com")
 	qs := []string{
+		"INSERT INTO `subdomains` (`subdomain`, `url`, `uc`, `owner_id`, `perms`, `hash`) VALUES ('api', 'api.oligoden.com', 'a', 1, ':::', 'xyz')",
 		// "INSERT INTO `sessions` (`uc`, `owner_id`, `perms`, `hash`) VALUES ('a', 1, ':::r', 'xyz')",
 		// "INSERT INTO `sessions` (`uc`, `owner_id`, `perms`, `hash`) VALUES ('b', 1, ':::r', 'tyu')",
 		// "INSERT INTO `session_users` (`session_id`, `user_id`) VALUES (2, 1)",
@@ -72,14 +73,14 @@ func Test(t *testing.T) {
 	testDBSetup(db, t, qs...)
 
 	profileMock := apitest.NewMock().
-		Post("http://example.com/profiles").
+		Post("http://api.oligoden.com/profiles").
 		RespondWith().
-		Body(`{"name": "jon"}`).
+		Body(`{"name": "john"}`).
 		Status(http.StatusOK).
 		End()
 
 	req := httptest.NewRequest(http.MethodPost, "/profiles", nil)
-	req.Host = "example.com"
+	req.Host = "api.oligoden.com"
 
 	apitest.New().
 		Report(apitest.SequenceDiagram()).
@@ -88,6 +89,7 @@ func Test(t *testing.T) {
 		HttpRequest(req).
 		Expect(t).
 		Status(http.StatusOK).
+		Body(`{"name": "john"}`).
 		End()
 
 	var id uint
@@ -98,6 +100,8 @@ func Test(t *testing.T) {
 
 	assert := assert.New(t)
 	assert.Equal(uint(1), id)
+
+	t.Error()
 }
 
 func testDBDropTables(t *testing.T) *sql.DB {

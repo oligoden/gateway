@@ -79,27 +79,27 @@ func mux(dmn string) *http.ServeMux {
 	store.Migrate(session.NewSessionUsersRecord())
 
 	dSubDomain := subdomain.NewDevice(store)
-	dSubDomain.SetProxy("api." + dmn)
+	dSubDomain.SetProxyHandler("api."+dmn, hIndex)
 	dSubDomain.SetProxy("staging." + dmn)
 	store.Migrate(subdomain.NewRecord())
 
 	mux.Handle("/", adapter.New(dmn).
 		Core(serveFile("static/index.html")).
-		SubDomain(dSubDomain.Check(dmn), "!api").
+		SubDomain(dSubDomain.Check(dmn), "-api").
 		And(dSession.Authenticate()).
 		Notify().Entry())
 
 	mux.Handle("/static/", adapter.New(dmn).
 		Core(serveFiles("/static/", "static")).
-		SubDomain(dSubDomain.Check(dmn), "!api").
+		SubDomain(dSubDomain.Check(dmn), "-api").
 		And(dSession.Authenticate()).
 		Notify().Entry())
 
 	mux.Handle("/profiles", adapter.New(dmn).
-		Core(hIndex).
+		NotFound().
 		SubDomain(dSubDomain.Check(dmn), "api").
 		And(dSession.CreateUser()).
-		SubDomain(dSubDomain.Check(dmn), "!api").
+		SubDomain(dSubDomain.Check(dmn), "-api").
 		And(dSession.Authenticate()).
 		Notify().Entry())
 

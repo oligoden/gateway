@@ -20,7 +20,7 @@ import (
 
 type Device struct {
 	device.Default
-	rps map[string]*httputil.ReverseProxy
+	rps map[string]http.Handler
 }
 
 func NewDevice(s model.Connector) *Device {
@@ -29,7 +29,7 @@ func NewDevice(s model.Connector) *Device {
 	nv := func(w http.ResponseWriter) view.Operator { return NewView(w) }
 	d.Default = device.NewDevice(nm, nv, s)
 
-	d.rps = make(map[string]*httputil.ReverseProxy)
+	d.rps = make(map[string]http.Handler)
 	caCertPool := x509.NewCertPool()
 
 	for _, c := range strings.Split(os.Getenv("CA_CERTS"), ",") {
@@ -91,4 +91,8 @@ func (d *Device) SetProxy(p string) {
 	}
 
 	d.rps[p] = httputil.NewSingleHostReverseProxy(parsedURL)
+}
+
+func (d *Device) SetProxyHandler(p string, h http.Handler) {
+	d.rps[p] = h
 }
