@@ -8,8 +8,9 @@ import (
 )
 
 type Record struct {
-	Subdomain string
-	URL       string
+	Domain string
+	Path   string
+	URL    string
 	data.Default
 }
 
