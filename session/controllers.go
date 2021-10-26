@@ -1,7 +1,6 @@
 package session
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -20,7 +19,6 @@ func (d Device) Authenticate() http.Handler {
 
 func (d Device) CreateUser() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("return func")
 		m := NewModel(r, d.Store)
 		m.CreateUser()
 		NewView(w).Error(m)
