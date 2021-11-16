@@ -23,7 +23,7 @@ type Device struct {
 	rps map[string]http.Handler
 }
 
-func NewDevice(s model.Connector) *Device {
+func NewDevice(s model.Connector, rpds ...string) *Device {
 	d := &Device{}
 	nm := func(r *http.Request) model.Operator { return NewModel(r, s) }
 	nv := func(w http.ResponseWriter) view.Operator { return NewView(w) }
@@ -82,21 +82,28 @@ func NewDevice(s model.Connector) *Device {
 		d.rps[c] = reverseProxy
 	}
 
-	for _, c := range strings.Split(os.Getenv("RPDS"), ",") {
-		if c == "" {
-			break
-		}
+	for _, rpd := range strings.Split(os.Getenv("RPDS"), ",") {
+		d.setReverseProxy(rpd)
+	}
 
-		parsedURL, err := url.Parse("http://" + c)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		reverseProxy := httputil.NewSingleHostReverseProxy(parsedURL)
-		d.rps[c] = reverseProxy
+	for _, rpd := range rpds {
+		d.setReverseProxy(rpd)
 	}
 
 	return d
+}
+
+func (d *Device) setReverseProxy(p string) {
+	if p == "" {
+		return
+	}
+
+	parsedURL, err := url.Parse("http://" + p)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	d.rps[p] = httputil.NewSingleHostReverseProxy(parsedURL)
 }
 
 func (d *Device) SetProxy(p string) {
