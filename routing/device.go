@@ -81,6 +81,21 @@ func NewDevice(s model.Connector) *Device {
 
 		d.rps[c] = reverseProxy
 	}
+
+	for _, c := range strings.Split(os.Getenv("RPDS"), ",") {
+		if c == "" {
+			break
+		}
+
+		parsedURL, err := url.Parse("http://" + c)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		reverseProxy := httputil.NewSingleHostReverseProxy(parsedURL)
+		d.rps[c] = reverseProxy
+	}
+
 	return d
 }
 
