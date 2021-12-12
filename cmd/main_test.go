@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/blend/go-sdk/assert"
 	"github.com/oligoden/chassis/adapter"
 	"github.com/oligoden/chassis/storage/gosql"
 	"github.com/steinfletcher/apitest"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRoot(t *testing.T) {
@@ -44,6 +44,10 @@ func TestRoot(t *testing.T) {
 		HttpRequest(req).
 		Expect(t).
 		Status(http.StatusOK).
+		HeaderPresent("Set-Cookie").
+		Cookies(
+			apitest.NewCookie("session"),
+		).
 		End()
 
 	stagingMock := apitest.NewMock().
@@ -76,7 +80,7 @@ func Test(t *testing.T) {
 
 	store := gosql.New(uri)
 	if store.Err() != nil {
-		t.Fatal("could not connect to store")
+		t.Fatal("could not connect to store ->", store.Err())
 	}
 
 	mux := adapter.NewMux().
@@ -107,7 +111,7 @@ func Test(t *testing.T) {
 	req.Host = "api.oligoden.com"
 
 	apitest.New().
-		Report(apitest.SequenceDiagram()).
+		// Report(apitest.SequenceDiagram()).
 		Mocks(profileMock).
 		Handler(mux).
 		HttpRequest(req).
@@ -124,8 +128,6 @@ func Test(t *testing.T) {
 
 	assert := assert.New(t)
 	assert.Equal(uint(1), id)
-
-	t.Error()
 }
 
 func testDBDropTables(t *testing.T, dbt, uri string) *sql.DB {
