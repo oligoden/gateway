@@ -10,7 +10,7 @@ func (d Device) Authenticate() http.Handler {
 		m.Bind()
 		m.Authenticate()
 
-		NewView(w).
+		NewView(w, d.domain).
 			SetUser(m).
 			SetCookie(m).
 			Error(m)
@@ -21,7 +21,7 @@ func (d Device) CreateUser() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := NewModel(r, d.Store)
 		m.CreateUser()
-		NewView(w).Error(m)
+		NewView(w, d.domain).Error(m)
 	})
 }
 
@@ -30,7 +30,7 @@ func (d Device) Signin() http.Handler {
 		m := NewModel(r, d.Store)
 		m.Signin()
 
-		NewView(w).
+		NewView(w, d.domain).
 			SetUser(m).
 			JSON(m)
 	})
@@ -42,7 +42,7 @@ func (d Device) Signout() http.Handler {
 		m.BindUser()
 		m.Signout()
 
-		NewView(w).
+		NewView(w, d.domain).
 			SetUser(m).
 			Error(m)
 	})

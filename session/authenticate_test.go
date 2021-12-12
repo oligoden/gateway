@@ -30,7 +30,7 @@ func TestFirstConn(t *testing.T) {
 		t.Error(s.Err().Error())
 	}
 	s.Migrate(NewRecord())
-	d := NewDevice(s)
+	d := NewDevice(s, "test.com")
 	d.Authenticate().ServeHTTP(w, r)
 
 	var id uint
@@ -82,7 +82,7 @@ func TestAuthenticateWithCookie(t *testing.T) {
 	if s.Err() != nil {
 		t.Error(s.Err())
 	}
-	d := NewDevice(s)
+	d := NewDevice(s, "test.com")
 	d.Authenticate().ServeHTTP(w, r)
 
 	assert := assert.New(t)
@@ -105,7 +105,7 @@ func TestAuthenticateWithCookie(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	s = gosql.New(dbt, uri)
-	d = NewDevice(s)
+	d = NewDevice(s, "test.com")
 	d.Authenticate().ServeHTTP(w, r)
 
 	assert.Equal("1", r.Header.Get("X_User"))
@@ -117,7 +117,7 @@ func TestAuthenticateWithCookie(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	s = gosql.New(dbt, uri)
-	d = NewDevice(s)
+	d = NewDevice(s, "test.com")
 	d.Authenticate().ServeHTTP(w, r)
 
 	assert.Equal("2", r.Header.Get("X_User"))
@@ -129,7 +129,7 @@ func TestAuthenticateWithCookie(t *testing.T) {
 	w = httptest.NewRecorder()
 
 	s = gosql.New(dbt, uri)
-	d = NewDevice(s)
+	d = NewDevice(s, "test.com")
 	d.Authenticate().ServeHTTP(w, r)
 
 	assert.Equal("1", r.Header.Get("X_User"))
