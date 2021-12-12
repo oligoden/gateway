@@ -9,8 +9,8 @@ services:
     environment:
       - "DB_NAME=gateway"
       - "DB_USER=user"
-      - "DB_PASSWORD=pass"
-      - "DB_ADDRESS=dev-db"
+      - "DB_PASS=pass"
+      - "DB_ADDR=dev-db"
     ports:
       - 8080:8080
     entrypoint: /opt/gateway/bin/gateway

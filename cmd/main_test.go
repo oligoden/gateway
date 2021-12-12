@@ -7,18 +7,31 @@ import (
 	"testing"
 
 	"github.com/blend/go-sdk/assert"
+	"github.com/oligoden/chassis/adapter"
+	"github.com/oligoden/chassis/storage/gosql"
 	"github.com/steinfletcher/apitest"
 )
 
 func TestRoot(t *testing.T) {
-	uri = "user:pass@tcp(localhost:3308)/test?charset=utf8&parseTime=True&loc=Local"
+	uri := "user:pass@tcp(localhost:3308)/test?charset=utf8&parseTime=True&loc=Local"
+	dbt := "mysql"
 
-	db := testDBDropTables(t)
+	db := testDBDropTables(t, dbt, uri)
 	defer db.Close()
 
-	mux := mux("oligoden.com")
+	store := gosql.New(uri)
+	if store.Err() != nil {
+		t.Fatal("could not connect to store")
+	}
+
+	mux := adapter.NewMux().
+		SetURL("http://oligoden.com").
+		SetStore("mysqldb", store).
+		AddRPD("staging.oligoden.com").
+		Compile(Mux)
+
 	qs := []string{
-		"INSERT INTO `subdomains` (`uc`, `subdomain`, `url`, `owner_id`, `perms`, `hash`) VALUES ('a', 'staging', 'staging.oligoden.com', 1, ':::r', 'abc')",
+		"INSERT INTO `routings` (`uc`, `domain`, `path`, `url`, `owner_id`, `perms`, `hash`) VALUES ('a', 'staging.oligoden.com', '/', 'staging.oligoden.com', 1, ':::r', 'abc')",
 	}
 	testDBSetup(db, t, qs...)
 
@@ -55,14 +68,25 @@ func TestRoot(t *testing.T) {
 }
 
 func Test(t *testing.T) {
-	uri = "user:pass@tcp(localhost:3308)/test?charset=utf8&parseTime=True&loc=Local"
+	uri := "user:pass@tcp(localhost:3308)/test?charset=utf8&parseTime=True&loc=Local"
+	dbt := "mysql"
 
-	db := testDBDropTables(t)
+	db := testDBDropTables(t, dbt, uri)
 	defer db.Close()
 
-	mux := mux("oligoden.com")
+	store := gosql.New(uri)
+	if store.Err() != nil {
+		t.Fatal("could not connect to store")
+	}
+
+	mux := adapter.NewMux().
+		SetURL("http://oligoden.com").
+		SetStore("mysqldb", store).
+		AddRPD("api.oligoden.com").
+		Compile(Mux)
+
 	qs := []string{
-		"INSERT INTO `subdomains` (`subdomain`, `url`, `uc`, `owner_id`, `perms`, `hash`) VALUES ('api', 'api.oligoden.com', 'a', 1, ':::', 'xyz')",
+		"INSERT INTO `routings` (`uc`, `domain`, `path`, `url`, `owner_id`, `perms`, `hash`) VALUES ('a', 'api.oligoden.com', '/profiles', 'api.oligoden.com', 1, ':::', 'abc')",
 		// "INSERT INTO `sessions` (`uc`, `owner_id`, `perms`, `hash`) VALUES ('a', 1, ':::r', 'xyz')",
 		// "INSERT INTO `sessions` (`uc`, `owner_id`, `perms`, `hash`) VALUES ('b', 1, ':::r', 'tyu')",
 		// "INSERT INTO `session_users` (`session_id`, `user_id`) VALUES (2, 1)",
@@ -104,7 +128,7 @@ func Test(t *testing.T) {
 	t.Error()
 }
 
-func testDBDropTables(t *testing.T) *sql.DB {
+func testDBDropTables(t *testing.T, dbt, uri string) *sql.DB {
 	db, err := sql.Open(dbt, uri)
 	if err != nil {
 		t.Error(err)
@@ -118,7 +142,7 @@ func testDBDropTables(t *testing.T) *sql.DB {
 	db.Exec("DROP TABLE sessions")
 	db.Exec("DROP TABLE session_users")
 
-	db.Exec("DROP TABLE subdomains")
+	db.Exec("DROP TABLE routings")
 
 	return db
 }

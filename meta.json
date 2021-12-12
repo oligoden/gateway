@@ -28,6 +28,16 @@
                         "record.go": {}
                     }
                 },
+                "routing": {
+                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "files": {
+                        "device.go": {},
+                        "controllers.go": {},
+                        "models.go": {},
+                        "view.go": {},
+                        "record.go": {}
+                    }
+                },
                 "session": {
                     "controls":{"behaviour": {"filters":{"comment":{}}}},
                     "files": {
@@ -42,13 +52,6 @@
             "files": {
                 "gateway.go": {},
                 "index.go": {}
-            }
-        },
-        "static": {
-            "src-ovr": "../",
-            "controls":{"behaviour": {"options":"output", "filters":{"comment":{}}}},
-            "files": {
-                "index.html":{}
             }
         }
     },
