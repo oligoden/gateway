@@ -8,6 +8,7 @@ import (
 
 	"github.com/oligoden/chassis/adapter"
 	"github.com/oligoden/chassis/storage/gosql"
+	"github.com/oligoden/gateway/session"
 	"github.com/steinfletcher/apitest"
 	"github.com/stretchr/testify/assert"
 )
@@ -44,7 +45,6 @@ func TestRoot(t *testing.T) {
 		HttpRequest(req).
 		Expect(t).
 		Status(http.StatusOK).
-		HeaderPresent("Set-Cookie").
 		Cookies(
 			apitest.NewCookie("session"),
 		).
@@ -68,6 +68,51 @@ func TestRoot(t *testing.T) {
 		Expect(t).
 		Status(http.StatusOK).
 		Body(`<staging html page>`).
+		End()
+}
+
+func TestCookieNaming(t *testing.T) {
+	uri := "user:pass@tcp(localhost:3308)/test?charset=utf8&parseTime=True&loc=Local"
+	dbt := "mysql"
+
+	db := testDBDropTables(t, dbt, uri)
+	defer db.Close()
+
+	store := gosql.New(uri)
+	if store.Err() != nil {
+		t.Fatal("could not connect to store")
+	}
+
+	var Mux func(*adapter.Mux) = func(mux *adapter.Mux) {
+		s := mux.Stores["mysqldb"]
+
+		dSession := session.NewDevice(s, mux.URL.Hostname())
+		dSession.SetCookieName("test")
+		s.Migrate(session.NewRecord())
+		s.Migrate(session.NewSessionUsersRecord())
+
+		mux.Handle("/").
+			Core(serveFile("static/index.html")).
+			And(dSession.Authenticate()).
+			Notify().Entry()
+	}
+
+	mux := adapter.NewMux().
+		SetURL("http://oligoden.com").
+		SetStore("mysqldb", store).
+		Compile(Mux)
+
+	req := httptest.NewRequest(http.MethodGet, "/", nil)
+	req.Host = "oligoden.com"
+
+	apitest.New().
+		Handler(mux).
+		HttpRequest(req).
+		Expect(t).
+		Status(http.StatusOK).
+		Cookies(
+			apitest.NewCookie("test"),
+		).
 		End()
 }
 

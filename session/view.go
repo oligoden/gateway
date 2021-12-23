@@ -36,14 +36,14 @@ func (v *View) SetUser(m *Model) *View {
 	return v
 }
 
-func (v *View) SetCookie(m *Model) *View {
+func (v *View) SetCookie(m *Model, cn string) *View {
 	if m.Err() != nil {
 		return v
 	}
 
 	expire := time.Now().Add(24 * 200 * time.Hour)
 	cookie := &http.Cookie{
-		Name:     "session",
+		Name:     cn,
 		Value:    m.session,
 		Path:     "/",
 		Expires:  expire,

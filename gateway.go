@@ -50,11 +50,15 @@ func Serve(mux *http.ServeMux) {
 	time.Sleep(100 * time.Millisecond)
 }
 
+func split(r rune) bool {
+	return r == ',' || r == ' '
+}
+
 func ServeTLS(mux *http.ServeMux) {
 	certManager := autocert.Manager{
 		Prompt:     autocert.AcceptTOS,
 		Cache:      autocert.DirCache("certs"),
-		HostPolicy: autocert.HostWhitelist(strings.Split(os.Getenv("ALLOW"), ",")...),
+		HostPolicy: autocert.HostWhitelist(strings.FieldsFunc(os.Getenv("ALLOW"), split)...),
 		Email:      os.Getenv("EMAIL"),
 	}
 
