@@ -15,8 +15,9 @@ import (
 
 type Model struct {
 	model.Default
-	user    string
-	session string
+	user       string
+	session    string
+	cookieName string
 }
 
 func NewModel(r *http.Request, s model.Connector) *Model {
@@ -24,6 +25,7 @@ func NewModel(r *http.Request, s model.Connector) *Model {
 	m.Default = model.Default{}
 	m.Request = r
 	m.Store = s
+	m.cookieName = "session"
 	m.NewData = func() data.Operator { return NewRecord() }
 	m.Data(NewRecord())
 	return m
@@ -35,7 +37,7 @@ func (m *Model) Bind() {
 	}
 
 	m.user = m.Request.Header.Get("X_user")
-	sessionCookie, err := m.Request.Cookie("session")
+	sessionCookie, err := m.Request.Cookie(m.cookieName)
 	if err != nil {
 		if err != http.ErrNoCookie {
 			m.Err("internal error, could not get cookie, %w", err)

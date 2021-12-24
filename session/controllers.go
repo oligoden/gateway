@@ -7,6 +7,7 @@ import (
 func (d Device) Authenticate() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := NewModel(r, d.Store)
+		m.cookieName = d.cookieName
 		m.Bind()
 		m.Authenticate()
 
