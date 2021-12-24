@@ -31,8 +31,8 @@ func (m *Model) URL() string {
 	e := NewRecord()
 	c := m.Store.Connect(m.User())
 	whereDomain := gosql.NewWhere("domain=?", m.Request.Host)
-	wherePath := gosql.NewWhere("path=?", m.Request.URL.Path)
-	c.AddModifiers(whereDomain, wherePath)
+	// wherePath := gosql.NewWhere("path=?", m.Request.URL.Path)
+	c.AddModifiers(whereDomain)
 	c.Read(e)
 	if c.Err() != nil {
 		m.Err(c.Err())
