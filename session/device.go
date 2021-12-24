@@ -24,3 +24,7 @@ func NewDevice(s model.Connector, domain string) *Device {
 	d.Default = device.NewDevice(nm, nv, s)
 	return &d
 }
+
+func (d *Device) SetCookieName(n string) {
+	d.cookieName = n
+}
