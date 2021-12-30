@@ -14,9 +14,13 @@ import (
 	"golang.org/x/crypto/acme/autocert"
 )
 
-func Serve(mux *http.ServeMux) {
+func Serve(mux *http.ServeMux, addr string) {
+	if addr == "" {
+		addr = ":8080"
+	}
+
 	httpServer := &http.Server{
-		Addr:           ":8080",
+		Addr:           addr,
 		Handler:        mux,
 		ReadTimeout:    60 * time.Second,
 		WriteTimeout:   60 * time.Second,
@@ -36,7 +40,7 @@ func Serve(mux *http.ServeMux) {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 
-	log.Println("running http gateway")
+	log.Println("running http server")
 	select {
 	case err := <-serverError:
 		fmt.Println("http server error", err)
@@ -123,7 +127,7 @@ func ServeTLS(mux *http.ServeMux) {
 	quit := make(chan os.Signal)
 	signal.Notify(quit, os.Interrupt)
 
-	log.Println("running https gateway")
+	log.Println("running https server")
 	select {
 	case err := <-serverHTTPError:
 		fmt.Println("server error", err)

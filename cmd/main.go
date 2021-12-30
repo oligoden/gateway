@@ -79,5 +79,5 @@ func main() {
 		SetStore("mysqldb", store).
 		AddRPD("profile:8080").Compile(Mux)
 
-	gateway.Serve(mux)
+	gateway.Serve(mux, ":8080")
 }
