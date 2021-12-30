@@ -9,7 +9,7 @@ func (d Device) Check() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		m := NewModel(r, d.Store)
 
-		url := m.URL()
+		url, resetCORS := m.URL()
 		if m.Err() != nil {
 			NewView(w).Error(m)
 			return
@@ -27,6 +27,10 @@ func (d Device) Check() http.Handler {
 		}
 
 		log.Println("forwarding to", url)
+		if resetCORS {
+			w.Header().Del("Access-Control-Allow-Origin")
+			w.Header().Del("Access-Control-Allow-Credentials")
+		}
 		proxy.ServeHTTP(w, r)
 	})
 }

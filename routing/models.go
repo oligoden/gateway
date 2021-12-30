@@ -23,9 +23,9 @@ func NewModel(r *http.Request, s model.Connector) *Model {
 	return m
 }
 
-func (m *Model) URL() string {
+func (m *Model) URL() (string, bool) {
 	if m.Err() != nil {
-		return ""
+		return "", false
 	}
 
 	e := NewRecord()
@@ -36,8 +36,8 @@ func (m *Model) URL() string {
 	c.Read(e)
 	if c.Err() != nil {
 		m.Err(c.Err())
-		return ""
+		return "", false
 	}
 
-	return e.URL
+	return e.URL, e.resetCORS
 }
