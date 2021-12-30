@@ -11,7 +11,7 @@ type Record struct {
 	Domain    string
 	Path      string
 	URL       string
-	resetCORS bool
+	ResetCORS bool
 	data.Default
 }
 

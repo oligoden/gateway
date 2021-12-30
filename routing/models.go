@@ -39,5 +39,5 @@ func (m *Model) URL() (string, bool) {
 		return "", false
 	}
 
-	return e.URL, e.resetCORS
+	return e.URL, e.ResetCORS
 }
