@@ -13,7 +13,7 @@ func (d Device) Authenticate() http.Handler {
 
 		NewView(w, d.domain).
 			SetUser(m).
-			SetCookie(m, d.cookieName).
+			SetCookie(m).
 			Error(m)
 	})
 }

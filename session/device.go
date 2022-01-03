@@ -25,6 +25,10 @@ func NewDevice(s model.Connector, domain string) *Device {
 	return &d
 }
 
-func (d *Device) SetCookieName(n string) {
-	d.cookieName = n
+func (d *Device) SetCookieName(cn string) {
+	if cn == "" {
+		return
+	}
+
+	d.cookieName = cn
 }
