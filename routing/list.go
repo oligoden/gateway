@@ -1,6 +1,8 @@
 package routing
 
-type List map[string]Record
+import "strings"
+
+type List []Record
 
 func NewList() List {
 	return List{}
@@ -44,4 +46,21 @@ func (List) Hasher() error {
 
 func (List) Prepare() error {
 	return nil
+}
+func (e List) Len() int {
+	return len(e)
+}
+func (e List) Swap(i, j int) {
+	e[i], e[j] = e[j], e[i]
+}
+func (e List) Less(i, j int) bool {
+	return pathLength(e[i].Path) > pathLength(e[j].Path)
+}
+func pathLength(p string) uint {
+	ts := strings.Split(p, "/")
+	l := uint(len(ts))
+	if ts[len(ts)-1] != "" {
+		l++
+	}
+	return l
 }

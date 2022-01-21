@@ -2,6 +2,8 @@ package routing
 
 import (
 	"net/http"
+	"sort"
+	"strings"
 
 	"github.com/oligoden/chassis/device/model"
 	"github.com/oligoden/chassis/device/model/data"
@@ -28,16 +30,26 @@ func (m *Model) URL() (string, bool) {
 		return "", false
 	}
 
-	e := NewRecord()
+	e := NewList()
 	c := m.Store.Connect(m.User())
 	whereDomain := gosql.NewWhere("domain=?", m.Request.Host)
-	// wherePath := gosql.NewWhere("path=?", m.Request.URL.Path)
 	c.AddModifiers(whereDomain)
-	c.Read(e)
+	c.Read(&e)
 	if c.Err() != nil {
 		m.Err(c.Err())
 		return "", false
 	}
 
-	return e.URL, e.ResetCORS
+	sort.Sort(e)
+	var url string
+	var resetCORS bool
+	for _, record := range e {
+		if strings.HasPrefix(m.Request.URL.Path, record.Path) {
+			url = record.URL
+			resetCORS = record.ResetCORS
+			break
+		}
+	}
+
+	return url, resetCORS
 }
