@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/oligoden/chassis/device/model"
-	"github.com/oligoden/chassis/device/model/data"
 	"github.com/oligoden/chassis/storage/gosql"
 )
 
@@ -20,7 +19,6 @@ func NewModel(r *http.Request, s model.Connector) *Model {
 	m.Request = r
 	m.Store = s
 	m.BindUser()
-	m.NewData = func() data.Operator { return NewRecord() }
 	m.Data(NewRecord())
 	return m
 }

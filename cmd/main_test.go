@@ -40,7 +40,6 @@ func TestRoot(t *testing.T) {
 	req.Host = "oligoden.com"
 
 	apitest.New().
-		// Report(apitest.SequenceDiagram()).
 		Handler(mux).
 		HttpRequest(req).
 		Expect(t).

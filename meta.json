@@ -1,25 +1,22 @@
 {
     "name": "gateway",
-    "work-location": ".",
-    "dest-location": ".",
-    "controls": {
-        "mappings": [
-            {"start": "file:*.go", "end": "exec:*"}
-        ]
-    },
-    "directories": {
+    "mappings": [
+        {"start": "*.go", "end": "exec:compile-gateway"}
+    ],
+    "dirs": {
         ".gateway": {
-            "src-ovr": "../",
-            "controls":{"behaviour": {"options":"output", "filters":{"comment":{}}}},
-            "directories": {
+            "orig": "../",
+            "options":"output",
+            "filters":{"comment":{}},
+            "dirs": {
                 "cmd": {
-                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "filters":{"comment":{}},
                     "files": {
                         "main.go": {}
                     }
                 },
                 "subdomain": {
-                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "filters":{"comment":{}},
                     "files": {
                         "device.go": {},
                         "controllers.go": {},
@@ -29,17 +26,18 @@
                     }
                 },
                 "routing": {
-                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "filters":{"comment":{}},
                     "files": {
                         "device.go": {},
                         "controllers.go": {},
                         "models.go": {},
                         "view.go": {},
+                        "list.go": {},
                         "record.go": {}
                     }
                 },
                 "session": {
-                    "controls":{"behaviour": {"filters":{"comment":{}}}},
+                    "filters":{"comment":{}},
                     "files": {
                         "device.go": {},
                         "controllers.go": {},

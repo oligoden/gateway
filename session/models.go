@@ -9,7 +9,7 @@ import (
 
 	"github.com/oligoden/chassis"
 	"github.com/oligoden/chassis/device/model"
-	"github.com/oligoden/chassis/device/model/data"
+	"github.com/oligoden/chassis/storage"
 	"github.com/oligoden/chassis/storage/gosql"
 )
 
@@ -26,7 +26,6 @@ func NewModel(r *http.Request, s model.Connector) *Model {
 	m.Request = r
 	m.Store = s
 	m.cookieName = "session"
-	m.NewData = func() data.Operator { return NewRecord() }
 	m.Data(NewRecord())
 	return m
 }
@@ -83,7 +82,13 @@ func (m *Model) Authenticate() {
 	fmt.Println("got session", session.ID)
 	m.Request.Header.Set("X_session", fmt.Sprint(session.ID))
 
+	m.setUser(c)
+	// m.setGroups(c)
+}
+
+func (m *Model) setUser(c storage.Crudder) {
 	userRecords := gosql.UserRecords{}
+	where := gosql.NewWhere("sessions.hash = ?", m.session)
 	joinSessionUsers := gosql.NewJoin("LEFT JOIN session_users ON session_users.user_id = users.owner_id")
 	joinSessions := gosql.NewJoin("LEFT JOIN sessions ON sessions.id = session_users.session_id")
 	c.AddModifiers(joinSessionUsers, joinSessions, where)
